@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+bandit
+radon
+flake8
+python-multipart
+httpx
+python-dotenv
+itsdangerous
+google-genai
