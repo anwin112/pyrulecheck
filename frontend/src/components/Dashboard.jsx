@@ -24,6 +24,7 @@ export default function Dashboard() {
             return;
         }
 
+        setUrl(repoUrl);
         setLoading(true);
         setError('');
         setReport(null);
@@ -177,6 +178,7 @@ export default function Dashboard() {
                             )}
                             {activeTab === 'ai_fixes' && (
                                 <AIFixList
+                                    repoFullName={url.replace('https://github.com/', '').replace('.git', '')}
                                     aiStatus={report.ai_status}
                                     suggestions={report.ai_fix_suggestions}
                                     onFixApplied={() => setHasAppliedFixes(true)}

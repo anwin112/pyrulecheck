@@ -40,3 +40,165 @@ Raw response: {
     }
   ]
 }
+Exception: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+Final Exception: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+Raw response: {
+  "fix_suggestions": [
+    {
+      "fix_id": "SEC-001-fix-1",
+      "file": "app.py",
+      "line": 13,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoding sensitive information (e.g., API keys, database credentials, encryption keys) in source code creates a severe security risk. If the code is accessed, compiled, or deployed, these secrets are exposed, leading to unauthorized access, data breaches, or system compromise. It also hinders credential rotation and secure lifecycle management.",
+      "recommended_fix_explanation": "Secrets must be externalized from the codebase. Use environment variables, a dedicated secret management service (e.g., AWS Secrets Manager, HashiCorp Vault), or a secure configuration file loaded at runtime. Environment variables are a common and effective method for cloud-native applications.",
+      "secure_code_example": "import os\n\n# Original: API_KEY = \"supersecretkey123\"\n\n# Fix: Load from environment variable at runtime\nAPI_KEY = os.getenv(\"MY_API_KEY\")\nif not API_KEY:\n    raise ValueError(\"MY_API_KEY environment variable not set\")\n\n# Use API_KEY in your application logic securely\ndef call_external_service():\n    print(f\"Calling service with API Key: {API_KEY[:4]}...\") # Displaying only prefix for security logging\n    # ... actual API call using API_KEY"
+    },
+    {
+      "fix_id": "SEC-002-fix-1",
+      "file": "app.py",
+      "line": 21,
+      "issue_type": "SEC-002",
+      "risk_explanation": "The `eval()` function executes arbitrary Python code from a string. If `eval()` processes untrusted or user-controlled input, an attacker can inject malicious code, leading to arbitrary code execution, data exfiltration, denial of service, or full system compromise. This is a critical code injection vulnerability.",
+      "recommended_fix_explanation": "Replace `eval()` with safer alternatives. For evaluating Python literal structures (strings, numbers, tuples, lists, dicts, booleans, None), use `ast.literal_eval()` which parses and evaluates input without executing arbitrary code. For arithmetic expressions, consider dedicated mathematical parsers or a sandboxed execution environment. Avoid `eval()` on any user-controlled input.",
+      "secure_code_example": "import ast\n\n# Original (unsafe example):\n# user_input = \"__import__('os').system('rm -rf /')\"\n# result = eval(user_input)\n\n# Fix: For safely evaluating Python literals (lists, dicts, numbers, etc.)\ndata_string = \"[1, 'hello', {'key': 'value'}]\"\ntry:\n    parsed_data = ast.literal_eval(data_string)\n    print(f\"Safely parsed data: {parsed_data}\")\nexcept (ValueError, SyntaxError) as e:\n    print(f\"Error parsing data: {e}. Input was not a valid literal structure.\")\n\n# For complex dynamic code execution, a complete re-architecture is usually required.\n# Never use eval() with untrusted input."
+    },
+    {
+      "fix_id": "SEC-001-fix-2",
+      "file": "database.py",
+      "line": 4,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoding sensitive information (e.g., API keys, database credentials, encryption keys) in source code creates a severe security risk. If the code is accessed, compiled, or deployed, these secrets are exposed, leading to unauthorized access, data breaches, or system compromise. It also hinders credential rotation and secure lifecycle management.",
+      "recommended_fix_explanation": "Secrets must be externalized from the codebase. Use environment variables, a dedicated secret management service (e.g., AWS Secrets Manager, HashiCorp Vault), or a secure configuration file loaded at runtime. Environment variables are a common and effective method for cloud-native applications.",
+      "secure_code_example": "import os\n\n# Original: DB_PASSWORD = \"mysecretpass\"\n\n# Fix: Load from environment variable\nDB_PASSWORD = os.getenv(\"DATABASE_PASSWORD\")\nif not DB_PASSWORD:\n    raise ValueError(\"DATABASE_PASSWORD environment variable not set\")\n\n# Use DB_PASSWORD for database connection\ndef connect_to_database():\n    print(f\"Connecting to DB with user and obfuscated password: ********\")\n    # Example: db_connection = create_db_connection(user='admin', password=DB_PASSWORD)\n    # ... actual database connection logic"
+    },
+    {
+      "fix_id": "SEC-008-fix-1",
+      "file": "database.py",
+      "line": 12,
+      "issue_type": "SEC-008",
+      "risk_explanation": "MD5 is a cryptographically broken hash function. It is highly susceptible to collision attacks, where two different inputs produce the same hash output. This weakness makes MD5 unsuitable for integrity checks, digital signatures, password storage, or any security application requiring strong collision resistance, as an attacker can forge or manipulate data.",
+      "recommended_fix_explanation": "Replace MD5 with modern, cryptographically strong hashing algorithms. For general-purpose data integrity, use SHA-256 or SHA-3. For password storage, use dedicated password hashing functions designed to be slow and resistant to brute-force attacks, such as `bcrypt` (recommended), `scrypt`, `argon2`, or PBKDF2. Python's `hashlib` module provides secure SHA-2 alternatives.",
+      "secure_code_example": "import hashlib\nimport bcrypt # Requires 'pip install bcrypt' for password hashing\n\n# Original (unsafe example):\n# data = b\"sensitive_data\"; hashed_data = hashlib.md5(data).hexdigest()\n\n# Fix: For general data integrity hashing, use SHA256\nfile_content = b\"important_document_content\"\nhashed_content_sha256 = hashlib.sha256(file_content).hexdigest()\nprint(f\"SHA256 Hash for content: {hashed_content_sha256}\")\n\n# Fix: For secure password storage, use bcrypt\nuser_password = b\"mysecretpassword123\"\n# Generate a unique salt for each password\nsalt = bcrypt.gensalt()\n# Hash the password with the salt\nhashed_password_bcrypt = bcrypt.hashpw(user_password, salt)\nprint(f\"Bcrypt Hashed Password: {hashed_password_bcrypt.decode()}\")\n\n# To verify a password later:\n# stored_hash = b\"...from_database...\"\n# user_supplied_password_attempt = b\"user_input\"\n# if bcrypt.checkpw(user_supplied_password_attempt, stored_hash):\n#     print(\"Password matches!\")\n# else:\n#     print(\"Password does not match.\")"
+    }
+  ]
+}
+Raw response: {
+  "fix_suggestions": [
+    {
+      "fix_id": "SEC-001-app-13",
+      "file": "app.py",
+      "line": 13,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoded secrets (e.g., API keys, database credentials) pose a severe security risk. They can be exposed through source code leaks, version control history, or reverse engineering, allowing unauthorized access to sensitive systems or data, leading to breaches or unauthorized operations.",
+      "recommended_fix_explanation": "Secrets must be externalized and managed securely using environment variables, a dedicated secrets management service (e.g., AWS Secrets Manager, HashiCorp Vault), or a secure configuration management system. This prevents them from being stored directly in the codebase and allows for rotation.",
+      "secure_code_example": "import os\n\n# Instead of: api_key = \"my_hardcoded_secret_123\"\nAPI_KEY = os.environ.get(\"MY_API_KEY\")\nif not API_KEY:\n    raise ValueError(\"Environment variable MY_API_KEY not set. Please configure it.\")"
+    },
+    {
+      "fix_id": "SEC-002-app-21",
+      "file": "app.py",
+      "line": 21,
+      "issue_type": "SEC-002",
+      "risk_explanation": "The `eval()` function executes arbitrary Python code from a string. If the input to `eval()` is derived from untrusted sources (e.g., user input), it creates a critical Remote Code Execution (RCE) vulnerability, enabling an attacker to inject and execute malicious code, leading to complete system compromise.",
+      "recommended_fix_explanation": "Avoid `eval()` whenever possible. For parsing data, use safer alternatives like `json.loads()` for JSON or `ast.literal_eval()` for safely evaluating Python literals (lists, dicts, numbers, strings). These alternatives parse data without executing arbitrary code.",
+      "secure_code_example": "import ast\nimport json\n\nuser_input = \"{'name': 'Alice', 'age': 30}\" # Example string that might be user-controlled\n\n# Safer alternative for evaluating Python literal structures (e.g., dicts, lists)\ntry:\n    data = ast.literal_eval(user_input)\n    # Process 'data' safely, e.g., data['name']\nexcept (ValueError, SyntaxError) as e:\n    print(f\"Error evaluating input as literal: {e}\")\n    # Handle error appropriately (e.g., return 400 Bad Request)\n\n# If input is expected to be JSON, use json.loads\n# user_input_json = '{\"product\": \"Laptop\", \"price\": 1200}'\n# try:\n#     data = json.loads(user_input_json)\n#     # Process 'data' safely\n# except json.JSONDecodeError as e:\n#     print(f\"Error decoding JSON input: {e}\")\n#     # Handle error appropriately"
+    },
+    {
+      "fix_id": "SEC-001-db-4",
+      "file": "database.py",
+      "line": 4,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoded secrets (e.g., API keys, database credentials) pose a severe security risk. They can be exposed through source code leaks, version control history, or reverse engineering, allowing unauthorized access to sensitive systems or data, leading to breaches or unauthorized operations.",
+      "recommended_fix_explanation": "Secrets must be externalized and managed securely using environment variables, a dedicated secrets management service (e.g., AWS Secrets Manager, HashiCorp Vault), or a secure configuration management system. This prevents them from being stored directly in the codebase and allows for rotation.",
+      "secure_code_example": "import os\n\n# Instead of: DB_PASSWORD = \"super_secret_db_pass\"\nDB_PASSWORD = os.environ.get(\"DATABASE_PASSWORD\")\nif not DB_PASSWORD:\n    raise ValueError(\"Environment variable DATABASE_PASSWORD not set. Please configure it.\")"
+    },
+    {
+      "fix_id": "SEC-008-db-12",
+      "file": "database.py",
+      "line": 12,
+      "issue_type": "SEC-008",
+      "risk_explanation": "MD5 is a cryptographically broken hashing algorithm highly susceptible to collision attacks, where two different inputs produce the same hash output. This makes it unsuitable for security-sensitive applications like password storage, digital signatures, or data integrity checks, as an attacker could forge data or bypass authentication.",
+      "recommended_fix_explanation": "Replace MD5 with strong, modern cryptographic hash functions. For data integrity or general-purpose hashing, use `hashlib.sha256` or `hashlib.sha512`. For password hashing, use dedicated Key Derivation Functions (KDFs) like `argon2id` (recommended), `bcrypt`, or `scrypt` with proper salting and work factors, instead of general-purpose hash functions.",
+      "secure_code_example": "import hashlib\nimport os\n# Install passlib for robust KDFs: pip install passlib\n# from passlib.hash import argon2\n\n# For general-purpose data integrity (e.g., file checksums):\ndata_to_hash = b\"sensitive_data_example\"\n# Instead of: hashlib.md5(data_to_hash).hexdigest()\nsecure_hash_sha256 = hashlib.sha256(data_to_hash).hexdigest()\n\n# For password storage (HIGHLY RECOMMENDED, do NOT use hashlib directly for passwords):\n# password = \"my_secure_password\"\n# hashed_password = argon2.hash(password)\n# To verify: argon2.verify(input_password, stored_hashed_password)\n"
+    }
+  ]
+}
+Raw response: {
+  "fix_suggestions": [
+    {
+      "fix_id": "SEC-001a",
+      "file": "app.py",
+      "line": 13,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoded secrets like API keys or credentials can be easily discovered if the source code is exposed (e.g., in a public repository, container image inspection). This grants unauthorized access to sensitive systems or data, leading to data breaches or service compromise.",
+      "recommended_fix_explanation": "Secrets must be externalized from the code. Use environment variables, a dedicated secrets management service (e.g., AWS Secrets Manager, HashiCorp Vault), or a secure configuration management system. Ensure these secrets are not committed to version control.",
+      "secure_code_example": "import os\n\n# Original: API_KEY = \"your_hardcoded_api_key_123\"\nAPI_KEY = os.getenv(\"APP_API_KEY\", \"default_if_not_set\") # Load from environment variable"
+    },
+    {
+      "fix_id": "SEC-002a",
+      "file": "app.py",
+      "line": 21,
+      "issue_type": "SEC-002",
+      "risk_explanation": "The `eval()` function executes arbitrary Python code from a string. If an attacker can control or influence the input string to `eval()`, they can inject malicious code, leading to Remote Code Execution (RCE), full system compromise, and data exfiltration.",
+      "recommended_fix_explanation": "Avoid `eval()` completely. For safely evaluating Python literals (strings, numbers, lists, dictionaries, tuples, booleans, None), use `ast.literal_eval()`. For parsing JSON, use `json.loads()`. For mathematical expressions, use a library like `sympy` or implement a custom, safe parser.",
+      "secure_code_example": "import ast\n\n# Original: user_input = \"{'name': 'test', 'value': 123}\"\n#           data = eval(user_input)\n\nuser_input = \"{'name': 'test', 'value': 123}\"\ntry:\n    # Use ast.literal_eval for safe evaluation of literal structures\n    data = ast.literal_eval(user_input)\nexcept (ValueError, SyntaxError) as e:\n    print(f\"Invalid input for evaluation: {e}\")\n    data = {}\n"
+    },
+    {
+      "fix_id": "SEC-001b",
+      "file": "database.py",
+      "line": 4,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoded secrets (e.g., database connection strings or passwords) within the code are a critical security vulnerability. If the code becomes accessible, these credentials are exposed, allowing unauthorized access to databases, potential data manipulation, or theft.",
+      "recommended_fix_explanation": "Database credentials should be stored and retrieved using secure environment variables or a secrets management solution. This prevents sensitive information from being directly embedded in the codebase, enhancing security and manageability.",
+      "secure_code_example": "import os\n\n# Original: DB_PASSWORD = \"my_super_secret_db_pass\"\nDB_PASSWORD = os.getenv(\"DB_PASSWORD\") # Load from environment variable\nDB_USER = os.getenv(\"DB_USER\", \"db_user\")\nDB_HOST = os.getenv(\"DB_HOST\", \"localhost\")"
+    },
+    {
+      "fix_id": "SEC-008a",
+      "file": "database.py",
+      "line": 12,
+      "issue_type": "SEC-008",
+      "risk_explanation": "MD5 is a cryptographically weak hashing algorithm. It is highly susceptible to collision attacks (finding two different inputs that produce the same hash) and pre-image attacks, making it unsuitable for security-critical applications like password storage, digital signatures, or data integrity verification, as attackers can forge data or bypass authentication.",
+      "recommended_fix_explanation": "Migrate to modern, cryptographically strong hashing algorithms. For general data integrity, use `hashlib.sha256` or `hashlib.sha512`. For password hashing, use specialized, slow, and salt-aware algorithms like `bcrypt` (via the `bcrypt` library) or `hashlib.scrypt` (Python 3.6+), which are designed to be resistant to brute-force attacks.",
+      "secure_code_example": "import hashlib\n\n# Original: def hash_data(data):\n#               return hashlib.md5(data.encode()).hexdigest()\n\ndef hash_data_sha256(data: str) -> str:\n    \"\"\"Hashes data using SHA-256 for integrity checks.\"\"\"\n    return hashlib.sha256(data.encode('utf-8')).hexdigest()\n\n# Example for secure password hashing (requires 'bcrypt' library):\n# import bcrypt\n# def hash_password(password: str) -> str:\n#     hashed_bytes = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())\n#     return hashed_bytes.decode('utf-8')\n\n# Example usage:\n# hashed_value = hash_data_sha256(\"sensitive_data_to_hash\")"
+    }
+  ]
+}
+Raw response: {
+  "fix_suggestions": [
+    {
+      "fix_id": "SEC-001a",
+      "file": "app.py",
+      "line": 13,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoding secrets like API keys or database credentials directly in the code makes them easily accessible to anyone with access to the codebase. This drastically increases the risk of unauthorized access, data breaches, and system compromise, especially if the code is committed to version control or deployed without proper security controls.",
+      "recommended_fix_explanation": "Secrets should be stored in environment variables, a dedicated secret management service (e.g., AWS Secrets Manager, HashiCorp Vault), or a secure configuration system. Accessing them via environment variables ensures they are external to the code and not exposed in source control or application bundles. Always provide sensible defaults or fail loudly if a critical secret is missing.",
+      "secure_code_example": "import os\n\n# ... existing code ...\n\n# Replace: API_KEY = \"my_hardcoded_api_key\"\nAPI_KEY = os.environ.get(\"API_KEY\", \"default_fallback_or_raise_error\") # Consider not having a default for critical secrets\n\n# Or, for critical secrets, explicitly require them\n# API_KEY = os.environ.get(\"API_KEY\")\n# if not API_KEY:\n#     raise ValueError(\"API_KEY environment variable not set\")\n"
+    },
+    {
+      "fix_id": "SEC-002a",
+      "file": "app.py",
+      "line": 21,
+      "issue_type": "SEC-002",
+      "risk_explanation": "The `eval()` function executes arbitrary Python code from a string. If the string input is derived from untrusted sources, such as user input or external data, an attacker can inject malicious code. This leads to severe vulnerabilities like arbitrary code execution, data exfiltration, or complete system compromise, bypassing application security controls.",
+      "recommended_fix_explanation": "Avoid `eval()` entirely. For safely evaluating simple Python literals (e.g., numbers, strings, lists, dictionaries, booleans, None), use `ast.literal_eval()`. For more complex dynamic behavior, consider using dictionaries for mapping function calls, a configuration language (like JSON/YAML) with a safe parser, or well-defined APIs instead of executing raw code.",
+      "secure_code_example": "import ast\n\n# ... existing code ...\n\nuser_input = \"[1, 'hello', {'key': 'value'}]\"\n\n# Replace: result = eval(user_input)\ntry:\n    result = ast.literal_eval(user_input)\n    print(f\"Safely evaluated: {result}\")\nexcept (ValueError, SyntaxError) as e:\n    print(f\"Invalid input for literal evaluation: {e}\")\n    # Handle error appropriately, e.g., return a default value or raise a specific exception\n"
+    },
+    {
+      "fix_id": "SEC-001b",
+      "file": "database.py",
+      "line": 4,
+      "issue_type": "SEC-001",
+      "risk_explanation": "Hardcoding secrets like database credentials directly in the code exposes sensitive information. If the code is compromised or accidentally exposed (e.g., in public repositories, build logs), attackers can gain unauthorized access to the database, leading to data breaches, manipulation, or loss.",
+      "recommended_fix_explanation": "Database credentials should be loaded from environment variables or a secure configuration management system at runtime. This practice prevents sensitive data from being embedded in the source code, enhancing security and making it easier to manage different credentials across deployment environments (development, staging, production).",
+      "secure_code_example": "import os\n\n# ... existing code ...\n\n# Replace: DB_HOST = \"localhost\"\n# Replace: DB_USER = \"admin\"\n# Replace: DB_PASSWORD = \"supersecretpassword\"\n# Replace: DB_NAME = \"mydatabase\"\n\nDB_HOST = os.environ.get(\"DB_HOST\", \"localhost\")\nDB_USER = os.environ.get(\"DB_USER\")\nDB_PASSWORD = os.environ.get(\"DB_PASSWORD\")\nDB_NAME = os.environ.get(\"DB_NAME\")\n\n# It's crucial to check if critical environment variables are set\nif not all([DB_USER, DB_PASSWORD, DB_NAME]):\n    raise ValueError(\"Missing one or more critical database environment variables (DB_USER, DB_PASSWORD, DB_NAME).\")\n"
+    },
+    {
+      "fix_id": "SEC-008a",
+      "file": "database.py",
+      "line": 12,
+      "issue_type": "SEC-008",
+      "risk_explanation": "MD5 is a cryptographically broken hash function that is highly vulnerable to collision and pre-image attacks. Using it for sensitive operations, particularly password hashing, allows attackers to easily create rainbow tables or perform brute-force attacks, making it trivial to recover original passwords. This significantly compromises user account security.",
+      "recommended_fix_explanation": "For password storage, use modern, cryptographically strong, and computationally expensive key derivation functions designed for passwords, such as Argon2 (recommended), bcrypt, or scrypt. These algorithms are specifically engineered to resist brute-force attacks by requiring significant computational resources. For general-purpose hashing (e.g., file integrity), use SHA-256 or SHA-512 from `hashlib`.",
+      "secure_code_example": "import os\nfrom argon2 import PasswordHasher # You'll need to install argon2-cffi: pip install argon2-cffi\n\n# ... existing code ...\n\nph = PasswordHasher()\n\ndef hash_password(password):\n    # Replace: return hashlib.md5(password.encode()).hexdigest()\n    return ph.hash(password.encode('utf-8'))\n\ndef verify_password(hashed_password, password):\n    try:\n        return ph.verify(hashed_password, password.encode('utf-8'))\n    except Exception:\n        return False # Handle exceptions like InvalidHashError or VerifyMismatchError\n\n# Example usage:\nuser_password = \"mySecureP@ssw0rd\"\nhashed_pwd = hash_password(user_password)\nprint(f\"Hashed password (Argon2): {hashed_pwd}\")\nprint(f\"Password verified: {verify_password(hashed_pwd, user_password)}\")\nprint(f\"Password verified (incorrect): {verify_password(hashed_pwd, 'wrongpassword')}\")\n"
+    }
+  ]
+}

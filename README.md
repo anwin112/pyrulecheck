@@ -8,6 +8,7 @@ PyRuleCheck is a static code analysis engine that performs deterministic, rule-b
 - ✅ **React Frontend:** Modern, dark-themed dashboard built with Vite and TailwindCSS.
 - ✅ **Constraints Checked:** Only parses `.py` files, requires max 3 Python files, and files under 500 lines.
 - ✅ **Grading System:** Aggregates findings into security, maintainability, and quality scores, giving an overall A-F grade.
+- ✅ **GitHub Write-Back:** Push approved AI fixes automatically to a new branch and open a Pull Request.
 
 ## Technical Stack
 - **Backend:** Python 3.9+, FastAPI, Uvicorn, Pydantic, AST, Bandit, Radon, Flake8

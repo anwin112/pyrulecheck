@@ -63,3 +63,7 @@ class ActionResponse(BaseModel):
     status: str
     message: Optional[str] = None
     applied_fixes: Optional[int] = None
+
+class PushFixesRequest(BaseModel):
+    repo_full_name: str
+    base_branch: Optional[str] = None

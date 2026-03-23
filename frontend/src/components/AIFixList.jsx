@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Sparkles, FileCode2, ChevronDown, CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import { Sparkles, FileCode2, ChevronDown, CheckCircle2, Loader2, XCircle, Github } from 'lucide-react';
 
-export default function AIFixList({ aiStatus, suggestions, onFixApplied }) {
+export default function AIFixList({ aiStatus, suggestions, onFixApplied, repoFullName }) {
     if (aiStatus === "not_configured" || aiStatus === "skipped_no_key") {
         return (
             <div className="text-center py-12 border border-dashed border-slate-700 rounded-xl bg-slate-800/20">
@@ -55,6 +55,10 @@ export default function AIFixList({ aiStatus, suggestions, onFixApplied }) {
     const [applyAllMessage, setApplyAllMessage] = useState('');
     const [globalApplySuccess, setGlobalApplySuccess] = useState(false);
 
+    const [pushing, setPushing] = useState(false);
+    const [pushMessage, setPushMessage] = useState('');
+    const [pushResult, setPushResult] = useState(null);
+
     const handleApplyAll = async () => {
         setApplyingAll(true);
         setApplyAllMessage('');
@@ -68,6 +72,38 @@ export default function AIFixList({ aiStatus, suggestions, onFixApplied }) {
             setApplyAllMessage("Failed to apply fixes: " + (e.response?.data?.detail || e.message));
         }
         setApplyingAll(false);
+    };
+
+    const handlePushFixes = async () => {
+        setPushing(true);
+        setPushMessage('Initializing GitHub push...');
+        setPushResult(null);
+
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8005/api';
+        
+        // Start polling for status updates
+        const pollInterval = setInterval(async () => {
+            try {
+                const statusRes = await axios.get(`${API_URL}/github/push-status`, { withCredentials: true });
+                if (statusRes.data && statusRes.data.status === 'in_progress') {
+                    setPushMessage(`Pushing: ${statusRes.data.step}...`);
+                }
+            } catch (err) {}
+        }, 1500);
+
+        try {
+            const res = await axios.post(`${API_URL}/github/push-fixes`, {
+                repo_full_name: repoFullName
+            }, { withCredentials: true });
+            
+            clearInterval(pollInterval);
+            setPushResult(res.data);
+            setPushMessage('Push successful!');
+        } catch (err) {
+            clearInterval(pollInterval);
+            setPushMessage("Failed to push fixes: " + (err.response?.data?.detail || err.message));
+        }
+        setPushing(false);
     };
 
     return (
@@ -101,6 +137,47 @@ export default function AIFixList({ aiStatus, suggestions, onFixApplied }) {
                     <span className={`text-sm font-medium ${applyAllMessage.includes('Failed') ? 'text-danger' : 'text-green-400'}`}>
                         {applyAllMessage}
                     </span>
+                )}
+                
+                {globalApplySuccess && !pushResult && (
+                    <div className="w-full max-w-sm mt-4">
+                        <button
+                            onClick={handlePushFixes}
+                            disabled={pushing}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-full font-medium transition-colors w-full justify-center shadow-lg text-sm"
+                        >
+                            {pushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
+                            {pushing ? pushMessage : 'Push Approved Fixes to GitHub'}
+                        </button>
+                        {pushMessage && !pushing && pushMessage.includes('Failed') && (
+                            <p className="text-danger text-sm font-medium mt-2 text-center">{pushMessage}</p>
+                        )}
+                    </div>
+                )}
+                
+                {pushResult && pushResult.status === 'success' && (
+                    <div className="w-full max-w-md mt-4 bg-green-900/20 border border-green-500/30 rounded-xl p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="bg-green-500/20 p-2 rounded-full text-green-400">
+                                <CheckCircle2 className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-medium text-white">Successfully Pushed to GitHub</h4>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                            <p className="flex justify-between">
+                                <span className="text-slate-400">Branch:</span>
+                                <span className="text-slate-200 font-mono">{pushResult.branch}</span>
+                            </p>
+                            <div className="pt-3 flex gap-3 mt-1">
+                                <a href={pushResult.commit_url} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 py-2 rounded-lg text-xs font-medium transition-colors">
+                                    <FileCode2 className="w-3.5 h-3.5" /> View Commit
+                                </a>
+                                <a href={pushResult.pr_url} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 py-2 rounded-lg text-xs font-medium transition-colors">
+                                    <Github className="w-3.5 h-3.5" /> Review PR #{pushResult.pr_number}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
